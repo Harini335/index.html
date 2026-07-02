@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA CUT — Freelance Video Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#05050c;
+    --bg-deep:#0a0918;
+    --bg-deep2:#0f0d22;
+    --nebula-purple:#7c4dff;
+    --nebula-pink:#ff6ec7;
+    --cosmic-teal:#2fe0c4;
+    --star-gold:#f4c95d;
+    --text-main:#eeeaf7;
+    --text-muted:#9490b3;
+    --glass:rgba(255,255,255,0.045);
+    --border:rgba(255,255,255,0.09);
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Sora', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-void);
+    color:var(--text-main);
+    font-family:var(--font-body);
+    overflow-x:hidden;
+    line-height:1.6;
+  }
+  ::selection{background:var(--nebula-purple);color:#fff;}
+  a{color:inherit;text-decoration:none;}
+
+  #starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;}
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;width:100%;z-index:100;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:22px 6%;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(to bottom, rgba(5,5,12,0.7), transparent);
+    transition:background .3s;
+  }
+  .logo{font-family:var(--font-display);font-weight:700;font-size:1.3rem;letter-spacing:.5px;}
+  .logo span{color:var(--cosmic-teal);}
+  .nav-links{display:flex;gap:38px;font-family:var(--font-mono);font-size:.78rem;letter-spacing:1px;text-transform:uppercase;}
+  .nav-links a{position:relative;color:var(--text-muted);transition:color .3s;}
+  .nav-links a:hover{color:var(--text-main);}
+  .nav-links a::after{content:'';position:absolute;left:0;bottom:-6px;width:0;height:1px;background:var(--cosmic-teal);transition:width .3s;}
+  .nav-links a:hover::after{width:100%;}
+  .nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;z-index:200;}
+  .nav-toggle span{width:24px;height:2px;background:var(--text-main);}
+
+  section{position:relative;padding:140px 6% 100px;}
+  .eyebrow{font-family:var(--font-mono);font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--cosmic-teal);margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+  .eyebrow::before{content:'';width:28px;height:1px;background:var(--cosmic-teal);}
+  h2.section-title{font-family:var(--font-display);font-weight:600;font-size:clamp(2rem,4.5vw,3.2rem);margin-bottom:20px;letter-spacing:-.5px;}
+  .section-sub{color:var(--text-muted);max-width:560px;font-size:1.02rem;margin-bottom:60px;}
+
+  .reveal{opacity:0;transform:translateY(36px);transition:opacity .9s ease, transform .9s ease;}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+
+  /* ===== HERO ===== */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    padding-top:0;perspective:1200px;overflow:hidden;
+  }
+  .orbit-scene{position:absolute;inset:0;pointer-events:none;}
+  .planet{position:absolute;border-radius:50%;will-change:transform;}
+  .planet::before{content:'';position:absolute;inset:0;border-radius:50%;
+    /* terminator shadow: darkens the far side like a sunlit sphere */
+    background:radial-gradient(circle at 68% 72%, rgba(0,0,0,0) 30%, rgba(0,0,0,.55) 68%, rgba(0,0,0,.85) 100%);
+    mix-blend-mode:multiply;
+  }
+  .planet::after{content:'';position:absolute;inset:-18%;border-radius:50%;
+    box-shadow:0 0 60px 10px var(--glow-color,rgba(124,77,255,.35));z-index:-1;}
+  .p1{width:190px;height:190px;top:12%;left:8%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 12%),
+      repeating-radial-gradient(circle at 55% 60%, rgba(255,255,255,.05) 0 2px, rgba(0,0,0,.05) 2px 5px),
+      radial-gradient(circle at 32% 28%, #c9b8ff, #7c4dff 42%, #3c2590 68%, #1c1140 92%);
+    --glow-color:rgba(124,77,255,.45);
+    animation:float1 9s ease-in-out infinite;
+    box-shadow:inset -14px -10px 30px rgba(0,0,0,.5), inset 8px 6px 18px rgba(255,255,255,.12);
+  }
+  .p2{width:110px;height:110px;top:60%;left:16%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.5), rgba(255,255,255,0) 14%),
+      repeating-conic-gradient(from 20deg at 50% 50%, rgba(255,255,255,.04) 0deg 6deg, rgba(0,0,0,.05) 6deg 12deg),
+      radial-gradient(circle at 35% 30%, #a9f5e9, #2fe0c4 45%, #14776a 72%, #0a3a34 95%);
+    --glow-color:rgba(47,224,196,.4);
+    animation:float2 7s ease-in-out infinite;
+    box-shadow:inset -10px -8px 22px rgba(0,0,0,.5), inset 5px 4px 12px rgba(255,255,255,.15);
+  }
+  .p3{width:70px;height:70px;top:22%;right:14%;
+    background:radial-gradient(circle at 35% 30%, #fff2d6, #f4c95d 50%, #a97a1f 75%, #5c3f0e 96%);
+    --glow-color:rgba(244,201,93,.45);
+    animation:float3 6s ease-in-out infinite;
+    box-shadow:inset -8px -6px 16px rgba(0,0,0,.5), inset 4px 3px 9px rgba(255,255,255,.18);
+  }
+  .p4{width:260px;height:260px;bottom:-10%;right:-6%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), rgba(255,255,255,0) 16%),
+      repeating-radial-gradient(circle at 60% 55%, rgba(255,255,255,.04) 0 3px, rgba(0,0,0,.04) 3px 7px),
+      radial-gradient(circle at 32% 28%, #ffc2ea, #ff6ec7 42%, #a13b7f 70%, #4a1638 94%);
+    --glow-color:rgba(255,110,199,.3);
+    animation:float4 11s ease-in-out infinite;
+    opacity:.75;
+    box-shadow:inset -18px -14px 36px rgba(0,0,0,.55), inset 10px 8px 20px rgba(255,255,255,.1);
+  }
+  .ring{position:absolute;border:1px solid rgba(255,255,255,.15);border-radius:50%;transform:rotateX(72deg);}
+  .p1 .ring{width:260px;height:260px;top:-35px;left:-35px;}
+  @keyframes float1{0%,100%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(18px,-26px) rotate(8deg);}}
+  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-14px,20px);}}
+  @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(16px,14px);}}
+  @keyframes float4{0%,100%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(-20px,-16px) rotate(-6deg);}}
+
+  .hero-content{position:relative;z-index:2;max-width:820px;}
+  .hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(2.6rem,7vw,5.2rem);line-height:1.02;letter-spacing:-1.5px;}
+  .hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--cosmic-teal),var(--nebula-purple) 70%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{margin-top:26px;font-size:1.15rem;color:var(--text-muted);max-width:520px;}
+  .hero-cta{margin-top:44px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono);font-size:.82rem;letter-spacing:1px;text-transform:uppercase;
+    padding:16px 30px;border-radius:2px;cursor:pointer;border:1px solid transparent;
+    transition:all .35s;display:inline-flex;align-items:center;gap:10px;
+  }
+  .btn-primary{background:var(--text-main);color:var(--bg-void);}
+  .btn-primary:hover{background:var(--cosmic-teal);transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(47,224,196,.5);}
+  .btn-ghost{border-color:var(--border);color:var(--text-main);}
+  .btn-ghost:hover{border-color:var(--cosmic-teal);color:var(--cosmic-teal);}
+
+  .timeline-strip{margin-top:80px;display:flex;align-items:center;gap:14px;color:var(--text-muted);font-family:var(--font-mono);font-size:.72rem;letter-spacing:1px;}
+  .timeline-track{flex:1;height:1px;background:var(--border);position:relative;overflow:hidden;}
+  .timeline-track::after{content:'';position:absolute;left:0;top:-1px;height:3px;width:40%;background:linear-gradient(90deg,var(--cosmic-teal),transparent);animation:scrub 5s linear infinite;}
+  @keyframes scrub{0%{left:-40%;}100%{left:100%;}}
+
+  /* ===== PORTFOLIO ===== */
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;}
+  .card{
+    position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);
+    background:var(--glass);padding:0;cursor:pointer;transform-style:preserve-3d;
+    transition:transform .12s ease-out, box-shadow .35s;
+  }
+  .card:hover{box-shadow:0 30px 60px -20px rgba(124,77,255,.35);}
+  .card-thumb{height:200px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,var(--t1),var(--t2));
+  }
+  .card-thumb::before{content:'';position:absolute;inset:0;
+    background:conic-gradient(from 0deg, transparent, rgba(255,255,255,.35), transparent 30%);
+    transform:translateX(-120%) rotate(0deg);transition:transform .8s;mix-blend-mode:overlay;
+  }
+  .card:hover .card-thumb::before{transform:translateX(60%) rotate(20deg);}
+  .card-thumb .play{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.6);
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+    background:rgba(255,255,255,.08);transition:all .3s;
+  }
+  .card:hover .card-thumb .play{background:rgba(255,255,255,.2);transform:translate(-50%,-50%) scale(1.1);}
+  .card-thumb .play::after{content:'';border-left:12px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px;}
+  .card-body{padding:22px 24px 26px;}
+  .card-tag{font-family:var(--font-mono);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--cosmic-teal);}
+  .card-title{font-family:var(--font-display);font-size:1.25rem;margin-top:8px;font-weight:600;}
+  .card-meta{margin-top:10px;color:var(--text-muted);font-size:.85rem;display:flex;justify-content:space-between;font-family:var(--font-mono);}
+
+  /* ===== SERVICES ===== */
+  .services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px;background:var(--border);border:1px solid var(--border);}
+  .service{background:var(--bg-void);padding:44px 32px;position:relative;overflow:hidden;transition:background .4s;}
+  .service:hover{background:var(--bg-deep2);}
+  .service-icon{width:50px;height:50px;margin-bottom:26px;animation:bob 4.5s ease-in-out infinite;position:relative;}
+  .service:nth-child(2n) .service-icon{animation-delay:-1.5s;}
+  .service:nth-child(3n) .service-icon{animation-delay:-3s;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .service-icon svg{width:100%;height:100%;stroke:var(--cosmic-teal);filter:drop-shadow(0 0 10px rgba(47,224,196,.5));}
+  .service h3{font-family:var(--font-display);font-size:1.15rem;font-weight:600;margin-bottom:10px;}
+  .service p{color:var(--text-muted);font-size:.92rem;}
+
+  /* ===== ABOUT ===== */
+  .about-wrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+  #nebula-canvas{width:100%;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--border);}
+  .about-text p{color:var(--text-muted);margin-bottom:18px;}
+  .about-stats{display:flex;gap:40px;margin-top:36px;}
+  .stat b{font-family:var(--font-display);font-size:2.1rem;display:block;color:var(--text-main);}
+  .stat span{font-family:var(--font-mono);font-size:.72rem;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+
+  /* ===== CONTACT ===== */
+  .contact-wrap{max-width:640px;margin:0 auto;text-align:center;}
+  .contact-wrap .section-sub{margin-left:auto;margin-right:auto;}
+  .contact-card{
+    margin-top:20px;padding:48px;border-radius:12px;border:1px solid var(--border);
+    background:radial-gradient(circle at 30% 20%, rgba(124,77,255,.12), transparent 60%), var(--glass);
+    backdrop-filter:blur(6px);text-align:left;
+  }
+  .field{position:relative;margin-bottom:26px;}
+  .field input, .field textarea, .field select{
+    width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);
+    color:var(--text-main);font-family:var(--font-body);font-size:1rem;padding:12px 2px;outline:none;
+    transition:border-color .3s;
+  }
+  .field select{color-scheme:dark;}
+  .field textarea{resize:vertical;min-height:90px;}
+  .field label{position:absolute;left:2px;top:12px;color:var(--text-muted);pointer-events:none;transition:all .25s;font-size:1rem;}
+  .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
+  .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label{
+    top:-14px;font-size:.7rem;letter-spacing:1px;color:var(--cosmic-teal);text-transform:uppercase;font-family:var(--font-mono);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--cosmic-teal);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .submit-btn{width:100%;margin-top:10px;justify-content:center;}
+  .form-note{margin-top:16px;font-size:.78rem;color:var(--text-muted);text-align:center;font-family:var(--font-mono);}
+
+  /* ===== FOOTER ===== */
+  footer{padding:70px 6% 40px;border-top:1px solid var(--border);}
+  .footer-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px;margin-bottom:50px;}
+  .footer-brand p{color:var(--text-muted);max-width:320px;margin-top:14px;font-size:.92rem;}
+  .socials{display:flex;gap:16px;}
+  .social-link{
+    width:46px;height:46px;border:1px solid var(--border);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;transition:all .35s;
+  }
+  .social-link svg{width:18px;height:18px;stroke:var(--text-muted);transition:stroke .35s;}
+  .social-link:hover{border-color:var(--cosmic-teal);box-shadow:0 0 22px rgba(47,224,196,.55);transform:translateY(-3px);}
+  .social-link:hover svg{stroke:var(--cosmic-teal);}
+  .footer-bottom{display:flex;justify-content:space-between;color:var(--text-muted);font-family:var(--font-mono);font-size:.75rem;flex-wrap:wrap;gap:10px;}
+
+  @media (max-width:820px){
+    .nav-links{position:fixed;top:0;right:0;height:100vh;width:70%;background:var(--bg-deep);
+      flex-direction:column;justify-content:center;align-items:flex-start;padding:0 40px;
+      transform:translateX(100%);transition:transform .4s;gap:26px;}
+    .nav-links.open{transform:translateX(0);}
+    .nav-toggle{display:flex;}
+    .about-wrap{grid-template-columns:1fr;}
+    .field-row{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="grain"></div>
+
+<nav>
+  <div class="logo">NOVA<span>CUT</span></div>
+  <div class="nav-links" id="navLinks">
+    <a href="#portfolio">Portfolio</a>
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="orbit-scene" id="orbitScene">
+    <div class="planet p1"><div class="ring"></div></div>
+    <div class="planet p2"></div>
+    <div class="planet p3"></div>
+    <div class="planet p4"></div>
+  </div>
+  <div class="hero-content">
+    <div class="eyebrow">Freelance Video Editor</div>
+    <h1>Cuts that move like <em>bodies in orbit.</em></h1>
+    <p>I edit brand films, music videos and documentaries with the precision of orbital mechanics — every frame placed with intent, every transition timed to gravity.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#portfolio">View Reel</a>
+      <a class="btn btn-ghost" href="#contact">Start a Project</a>
+    </div>
+    <div class="timeline-strip">
+      <span>00:00</span>
+      <div class="timeline-track"></div>
+      <span>04:12</span>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="reveal">
+    <div class="eyebrow">Selected Work</div>
+    <h2 class="section-title">Portfolio</h2>
+    <p class="section-sub">A handful of recent edits spanning brand, music, and documentary work. Click through to watch the full cuts.</p>
+  </div>
+  <div class="grid-cards reveal" id="portfolioGrid"></div>
+</section>
+
+<!-- SERVICES -->
+<section id="services" style="padding-left:0;padding-right:0;">
+  <div class="reveal" style="padding:0 6%;">
+    <div class="eyebrow">What I Do</div>
+    <h2 class="section-title">Services</h2>
+    <p class="section-sub">End-to-end post-production, from first assembly to final master.</p>
+  </div>
+  <div class="services-grid reveal" id="servicesGrid"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-wrap">
+    <canvas id="nebula-canvas" class="reveal"></canvas>
+    <div class="about-text reveal">
+      <div class="eyebrow">About Me</div>
+      <h2 class="section-title">Editing, grounded in story.</h2>
+      <p>I'm a freelance video editor working with brands, musicians, and filmmakers who want their footage to feel inevitable — like it could only have been cut this way. My process starts with structure, not effects: pacing, rhythm, and story shape come first.</p>
+      <p>Once the cut is locked, I layer in color, sound design and motion graphics to give it atmosphere — the kind of polish that makes a video feel bigger than its budget.</p>
+      <div class="about-stats">
+        <div class="stat"><b>120+</b><span>Projects Delivered</span></div>
+        <div class="stat"><b>6yrs</b><span>Editing Experience</span></div>
+        <div class="stat"><b>30+</b><span>Happy Clients</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-wrap reveal">
+    <div class="eyebrow" style="justify-content:center;">Get In Touch</div>
+    <h2 class="section-title">Let's cut something great.</h2>
+    <p class="section-sub">Tell me about your project and timeline — I'll reply within one orbit (24 hours).</p>
+    <form class="contact-card" id="contactForm">
+      <div class="field-row">
+        <div class="field">
+          <input type="text" id="cname" placeholder=" " required>
+          <label for="cname">Your Name</label>
+        </div>
+        <div class="field">
+          <input type="email" id="cemail" placeholder=" " required>
+          <label for="cemail">Email Address</label>
+        </div>
+      </div>
+      <div class="field">
+        <select id="cproject">
+          <option value="" disabled selected hidden> </option>
+          <option>Brand Film</option>
+          <option>Music Video</option>
+          <option>Documentary</option>
+          <option>Wedding Film</option>
+          <option>Corporate / Ad</option>
+          <option>Other</option>
+        </select>
+        <label for="cproject" style="top:-14px;font-size:.7rem;letter-spacing:1px;color:var(--cosmic-teal);text-transform:uppercase;font-family:var(--font-mono);">Project Type</label>
+      </div>
+      <div class="field">
+        <textarea id="cmsg" placeholder=" " required></textarea>
+        <label for="cmsg">Project Details</label>
+      </div>
+      <button type="submit" class="btn btn-primary submit-btn">Send Message</button>
+      <p class="form-note" id="formNote">This form is a static demo — connect it to your email service or backend to receive messages.</p>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">NOVA<span>CUT</span></div>
+      <p>Freelance video editing for brands, artists and storytellers who want their work to feel like it belongs among the stars.</p>
+    </div>
+    <div class="socials">
+      <a class="social-link" href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+      <a class="social-link" href="#" aria-label="Vimeo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M22 7.5c-.1 2-1.5 4.7-4.2 8.2-2.8 3.6-5.2 5.4-7.1 5.4-1.2 0-2.2-1.1-3-3.3L6 12.1C5.3 9.9 4.6 8.8 3.8 8.8c-.2 0-.7.3-1.6 1L1.5 9c1-.9 4-3.7 5.7-3.9 1.5-.1 2.4.9 2.8 3.1.4 2.4.7 3.9.9 4.5.5 2.2 1 3.3 1.6 3.3.5 0 1.2-.8 2.1-2.3.9-1.5 1.4-2.7 1.5-3.5.1-1.3-.4-2-1.5-2-.5 0-1.1.1-1.6.4C13.9 5.9 16 3.9 19 4c2 .1 2.9 1.4 3 3.5z"/></svg></a>
+      <a class="social-link" href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 10v7M7 7v.01M12 17v-4.5c0-1.4 1-2.5 2.3-2.5 1.3 0 2.2 1 2.2 2.5V17"/></svg></a>
+      <a class="social-link" href="#" aria-label="X / Twitter"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 NOVA CUT. All rights reserved.</span>
+    <span>Built for freelance video editing.</span>
+  </div>
+</footer>
+
+<script>
+/* ============ STARFIELD (fixed background, parallax) ============ */
+const starCanvas = document.getElementById('starfield');
+const sctx = starCanvas.getContext('2d');
+let w, h, stars = [], nebulaBlobs = [];
+let mouseX = 0, mouseY = 0, scrollY = 0;
+
+function resize(){
+  w = starCanvas.width = window.innerWidth;
+  h = starCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// realistic star colors: most stars are white, a good share skew warm or cool
+// like real stellar classes (O/B blue, G white-yellow, K/M orange-red)
+const STAR_COLORS = [
+  {c:'202,216,255', w:12}, // blue-white (hot)
+  {c:'238,234,247', w:46}, // white
+  {c:'255,244,214', w:22}, // warm white / yellow
+  {c:'255,210,161', w:12}, // orange
+  {c:'255,175,140', w:8}   // red
+];
+function pickStarColor(){
+  const total = STAR_COLORS.reduce((a,s)=>a+s.w,0);
+  let r = Math.random()*total;
+  for(const s of STAR_COLORS){ if(r < s.w) return s.c; r -= s.w; }
+  return STAR_COLORS[1].c;
+}
+
+let shootingStars = [];
+let milkyWayAngle = -0.42; // diagonal band across the sky
+
+function initStars(){
+  stars = [];
+  const count = Math.floor((w*h)/4200);
+  for(let i=0;i<count;i++){
+    // bias extra stars toward a diagonal Milky Way band for a denser dust-lane look
+    const nearBand = Math.random() < 0.4;
+    let x = Math.random()*w, y = Math.random()*h;
+    if(nearBand){
+      const t = Math.random()*Math.max(w,h)*1.6 - Math.max(w,h)*0.3;
+      const bx = w*0.5 + Math.cos(milkyWayAngle)*t;
+      const by = h*0.35 + Math.sin(milkyWayAngle)*t;
+      x = bx + (Math.random()-0.5)*220;
+      y = by + (Math.random()-0.5)*220;
+    }
+    const depth = Math.random()*Math.random()*0.7+0.15; // more small/dim/far stars than big/near ones
+    stars.push({
+      x, y,
+      r: (1-depth)*1.6 + 0.25,
+      baseAlpha: Math.random()*0.5+0.15,
+      tw: Math.random()*Math.PI*2,
+      speed: Math.random()*0.5+0.15,
+      depth,
+      color: pickStarColor()
+    });
+  }
+  nebulaBlobs = [
+    {x:w*0.14,y:h*0.22,r:340,c:'124,77,255',depth:0.15,seed:1},
+    {x:w*0.2,y:h*0.3,r:200,c:'88,60,190',depth:0.14,seed:2},
+    {x:w*0.86,y:h*0.62,r:380,c:'255,110,199',depth:0.1,seed:3},
+    {x:w*0.8,y:h*0.55,r:220,c:'190,60,140',depth:0.11,seed:4},
+    {x:w*0.5,y:h*0.88,r:300,c:'47,224,196',depth:0.12,seed:5},
+    {x:w*0.55,y:h*0.8,r:180,c:'20,100,90',depth:0.12,seed:6}
+  ];
+}
+initStars();
+window.addEventListener('resize', initStars);
+
+window.addEventListener('mousemove', e=>{
+  mouseX = (e.clientX / w - 0.5);
+  mouseY = (e.clientY / h - 0.5);
+});
+window.addEventListener('scroll', ()=>{ scrollY = window.scrollY; });
+
+function spawnShootingStar(){
+  const startX = Math.random()*w*0.6 + w*0.2;
+  shootingStars.push({
+    x:startX, y: -20,
+    vx: -3 - Math.random()*2.5, vy: 5 + Math.random()*2.5,
+    life:0, maxLife: 40 + Math.random()*20
+  });
+}
+setInterval(()=>{ if(Math.random() < 0.5) spawnShootingStar(); }, 4500);
+
+function drawMilkyWayBand(t){
+  // an elongated, softly glowing dust band drawn along milkyWayAngle,
+  // built from several offset radial glows squashed into an ellipse
+  sctx.save();
+  sctx.translate(w*0.5 + mouseX*20, h*0.35 + mouseY*20);
+  sctx.rotate(milkyWayAngle);
+  sctx.scale(1, 0.22); // squash into a long thin band
+  const bandLen = Math.max(w,h)*1.35;
+  const steps = 7;
+  for(let i=0;i<steps;i++){
+    const along = (i/(steps-1) - 0.5) * bandLen;
+    const wob = Math.sin(t*0.00008 + i*1.3) * 40;
+    const r = bandLen*0.16;
+    const g = sctx.createRadialGradient(along, wob*4, 0, along, wob*4, r);
+    g.addColorStop(0, 'rgba(220,214,255,0.05)');
+    g.addColorStop(0.4, 'rgba(180,170,230,0.035)');
+    g.addColorStop(1, 'rgba(180,170,230,0)');
+    sctx.fillStyle = g;
+    sctx.beginPath();
+    sctx.arc(along, wob*4, r, 0, Math.PI*2);
+    sctx.fill();
+  }
+  sctx.restore();
+}
+
+function drawStarfield(t){
+  // base sky: subtle vertical gradient instead of flat black, like a real night sky
+  const sky = sctx.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0, '#07060f');
+  sky.addColorStop(0.55, '#05050c');
+  sky.addColorStop(1, '#030308');
+  sctx.fillStyle = sky;
+  sctx.fillRect(0,0,w,h);
+
+  drawMilkyWayBand(t);
+
+  // layered nebula dust with soft turbulence via multiple offset gradients per blob
+  nebulaBlobs.forEach(b=>{
+    const wob = Math.sin(t*0.00012 + b.seed)*18;
+    const px = b.x + mouseX*40*b.depth - scrollY*b.depth*0.15 + wob;
+    const py = b.y + mouseY*40*b.depth + scrollY*b.depth*0.05 + wob*0.6;
+    const grad = sctx.createRadialGradient(px,py,0,px,py,b.r);
+    grad.addColorStop(0, `rgba(${b.c},0.14)`);
+    grad.addColorStop(0.5, `rgba(${b.c},0.06)`);
+    grad.addColorStop(1, `rgba(${b.c},0)`);
+    sctx.fillStyle = grad;
+    sctx.beginPath();
+    sctx.arc(px,py,b.r,0,Math.PI*2);
+    sctx.fill();
+  });
+
+  // stars with per-star color and twinkle
+  stars.forEach(s=>{
+    const alpha = s.baseAlpha + Math.sin(t*0.001*s.speed + s.tw)*0.25;
+    const px = s.x + mouseX*22*s.depth - scrollY*s.depth*0.08;
+    let py = (s.y + mouseY*22*s.depth) % h;
+    if(py < 0) py += h;
+    const a = Math.max(0, alpha);
+    sctx.beginPath();
+    sctx.arc(px, py, s.r, 0, Math.PI*2);
+    sctx.fillStyle = `rgba(${s.color},${a})`;
+    sctx.fill();
+    // faint cross-flare on the brighter, nearer stars for a lens-like glint
+    if(s.r > 1.2 && a > 0.55){
+      sctx.strokeStyle = `rgba(${s.color},${a*0.35})`;
+      sctx.lineWidth = 0.5;
+      sctx.beginPath();
+      sctx.moveTo(px - s.r*3, py); sctx.lineTo(px + s.r*3, py);
+      sctx.moveTo(px, py - s.r*3); sctx.lineTo(px, py + s.r*3);
+      sctx.stroke();
+    }
+  });
+
+  // shooting stars
+  shootingStars.forEach(sh=>{
+    sh.x += sh.vx; sh.y += sh.vy; sh.life++;
+    const fade = 1 - sh.life/sh.maxLife;
+    if(fade > 0){
+      const grad = sctx.createLinearGradient(sh.x, sh.y, sh.x - sh.vx*8, sh.y - sh.vy*8);
+      grad.addColorStop(0, `rgba(255,255,255,${fade})`);
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      sctx.strokeStyle = grad;
+      sctx.lineWidth = 1.4;
+      sctx.beginPath();
+      sctx.moveTo(sh.x, sh.y);
+      sctx.lineTo(sh.x - sh.vx*8, sh.y - sh.vy*8);
+      sctx.stroke();
+    }
+  });
+  shootingStars = shootingStars.filter(sh => sh.life < sh.maxLife);
+
+  // vignette for depth, like light falloff toward the edges of a wide astro shot
+  const vg = sctx.createRadialGradient(w*0.5,h*0.45,h*0.25,w*0.5,h*0.45,h*0.9);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.55)');
+  sctx.fillStyle = vg;
+  sctx.fillRect(0,0,w,h);
+
+  requestAnimationFrame(drawStarfield);
+}
+requestAnimationFrame(drawStarfield);
+
+/* ============ HERO PLANET PARALLAX (3D tilt via mouse) ============ */
+const orbitScene = document.getElementById('orbitScene');
+document.getElementById('hero').addEventListener('mousemove', e=>{
+  const rect = e.currentTarget.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width - 0.5;
+  const py = (e.clientY - rect.top) / rect.height - 0.5;
+  orbitScene.style.transform = `rotateY(${px*6}deg) rotateX(${-py*6}deg)`;
+});
+
+/* ============ NAV TOGGLE ============ */
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+navToggle.addEventListener('click', ()=> navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a=> a.addEventListener('click', ()=> navLinks.classList.remove('open')));
+
+/* ============ PORTFOLIO DATA + CARD 3D TILT ============ */
+const projects = [
+  {tag:'Brand Film', title:'Aurora Skincare', duration:'2:14', year:'2026', t1:'#3a1f7a', t2:'#7c4dff'},
+  {tag:'Music Video', title:'Parallax', duration:'3:47', year:'2025', t1:'#0c4c44', t2:'#2fe0c4'},
+  {tag:'Documentary', title:'Deep Field', duration:'18:02', year:'2025', t1:'#1a1a3d', t2:'#4a3f8c'},
+  {tag:'Wedding Film', title:'Eclipse', duration:'5:30', year:'2026', t1:'#591a44', t2:'#ff6ec7'},
+  {tag:'Corporate', title:'Liftoff', duration:'1:58', year:'2025', t1:'#3d2b0c', t2:'#f4c95d'},
+  {tag:'Short Film', title:'Event Horizon', duration:'9:41', year:'2024', t1:'#111', t2:'#7c4dff'}
+];
+const grid = document.getElementById('portfolioGrid');
+projects.forEach(p=>{
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-thumb" style="--t1:${p.t1};--t2:${p.t2};">
+      <div class="play"></div>
+    </div>
+    <div class="card-body">
+      <div class="card-tag">${p.tag}</div>
+      <div class="card-title">${p.title}</div>
+      <div class="card-meta"><span>${p.duration}</span><span>${p.year}</span></div>
+    </div>`;
+  card.addEventListener('mousemove', e=>{
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left)/r.width - 0.5;
+    const py = (e.clientY - r.top)/r.height - 0.5;
+    card.style.transform = `perspective(700px) rotateY(${px*10}deg) rotateX(${-py*10}deg) translateY(-4px)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform = 'perspective(700px) rotateY(0) rotateX(0) translateY(0)'; });
+  grid.appendChild(card);
+});
+
+/* ============ SERVICES DATA ============ */
+const services = [
+  {name:'Video Editing', desc:'Narrative structure, pacing and rhythm — the cut that carries the story.', icon:'<path d="M4 7h16M4 12h10M4 17h13" stroke-linecap="round"/>'},
+  {name:'Color Grading', desc:'Mood and tone built frame by frame with a consistent cinematic palette.', icon:'<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/>'},
+  {name:'Motion Graphics', desc:'Titles, lower thirds and animated elements that feel native to the footage.', icon:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/>'},
+  {name:'Sound Design', desc:'Mixing, SFX and score placement that gives every scene weight.', icon:'<path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M17 9a4 4 0 010 6"/>'},
+  {name:'VFX Compositing', desc:'Clean composites, sky replacements and subtle effects work.', icon:'<circle cx="9" cy="9" r="3"/><circle cx="15" cy="15" r="5"/>'},
+  {name:'Story Editing', desc:'Script and structure consulting before a single clip is cut.', icon:'<path d="M6 4h9l5 5v11H6z"/><path d="M15 4v5h5"/>'}
+];
+const sGrid = document.getElementById('servicesGrid');
+services.forEach(s=>{
+  const el = document.createElement('div');
+  el.className = 'service';
+  el.innerHTML = `<div class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linejoin="round">${s.icon}</svg></div>
+    <h3>${s.name}</h3><p>${s.desc}</p>`;
+  sGrid.appendChild(el);
+});
+
+/* ============ ABOUT NEBULA CANVAS ============ */
+const nebCanvas = document.getElementById('nebula-canvas');
+const nctx = nebCanvas.getContext('2d');
+let nW, nH, clouds = [], particles = [];
+
+const NEB_STAR_COLORS = ['202,216,255','238,234,247','238,234,247','255,244,214','255,210,161'];
+
+function sizeNebula(){
+  const rect = nebCanvas.getBoundingClientRect();
+  nebCanvas.width = rect.width * devicePixelRatio;
+  nebCanvas.height = rect.width * devicePixelRatio; // square
+  nW = nebCanvas.width; nH = nebCanvas.height;
+  clouds = [];
+  // pairs of overlapping large+small blobs per color = softer, dustier cloud edges
+  const colors = ['124,77,255','88,60,190','255,110,199','190,60,140','47,224,196','20,110,98'];
+  colors.forEach((c,i)=>{
+    clouds.push({
+      x: Math.random()*nW, y: Math.random()*nH,
+      r: nW*(0.14+Math.random()*0.24),
+      c, alpha: 0.16 + Math.random()*0.08,
+      vx:(Math.random()-0.5)*0.12, vy:(Math.random()-0.5)*0.12,
+      seed: i*1.7
+    });
+  });
+  particles = [];
+  for(let i=0;i<130;i++){
+    particles.push({
+      x:Math.random()*nW,y:Math.random()*nH,
+      r:Math.random()*Math.random()*1.8+0.3,
+      a:Math.random()*Math.PI*2,
+      speed:Math.random()*0.5+0.15,
+      color: NEB_STAR_COLORS[Math.floor(Math.random()*NEB_STAR_COLORS.length)]
+    });
+  }
+}
+sizeNebula();
+window.addEventListener('resize', sizeNebula);
+
+function drawNebula(t){
+  const sky = nctx.createLinearGradient(0,0,0,nH);
+  sky.addColorStop(0,'#0a0916');
+  sky.addColorStop(1,'#05040c');
+  nctx.fillStyle = sky;
+  nctx.fillRect(0,0,nW,nH);
+
+  clouds.forEach(c=>{
+    c.x += c.vx; c.y += c.vy;
+    if(c.x < -c.r) c.x = nW + c.r; if(c.x > nW+c.r) c.x = -c.r;
+    if(c.y < -c.r) c.y = nH + c.r; if(c.y > nH+c.r) c.y = -c.r;
+    const wob = Math.sin((t||0)*0.0001 + c.seed)*10;
+    const g = nctx.createRadialGradient(c.x+wob,c.y,0,c.x+wob,c.y,c.r);
+    g.addColorStop(0, `rgba(${c.c},${c.alpha})`);
+    g.addColorStop(0.55, `rgba(${c.c},${c.alpha*0.4})`);
+    g.addColorStop(1, `rgba(${c.c},0)`);
+    nctx.fillStyle = g;
+    nctx.beginPath(); nctx.arc(c.x+wob,c.y,c.r,0,Math.PI*2); nctx.fill();
+  });
+
+  particles.forEach(p=>{
+    p.a += 0.012*p.speed;
+    const alpha = (Math.sin(p.a)+1)/2*0.75+0.05;
+    nctx.beginPath();
+    nctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    nctx.fillStyle = `rgba(${p.color},${alpha})`;
+    nctx.fill();
+  });
+
+  const vg = nctx.createRadialGradient(nW*0.5,nH*0.5,nH*0.2,nW*0.5,nH*0.5,nH*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.45)');
+  nctx.fillStyle = vg;
+  nctx.fillRect(0,0,nW,nH);
+
+  requestAnimationFrame(drawNebula);
+}
+requestAnimationFrame(drawNebula);
+
+/* ============ SCROLL REVEAL ============ */
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in-view'); io.unobserve(en.target);} });
+}, {threshold:0.15});
+revealEls.forEach(el=> io.observe(el));
+
+/* ============ CONTACT FORM (static demo) ============ */
+document.getElementById('contactForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const note = document.getElementById('formNote');
+  note.textContent = "Thanks! This is a static demo, so nothing was actually sent — wire this form up to your email or backend service.";
+  note.style.color = 'var(--cosmic-teal)';
+  this.reset();
+});
+</script>
+
+</body>
+</html>
